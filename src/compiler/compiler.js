@@ -35,7 +35,7 @@ compiler.shorthand = function (shorthand, data, stats, config, theme) {
 
 compiler.compileEncoding = function (encoding) {
   // no need to pass stats if you pass in the data
-  if (!encoding.stats() && encoding.hasValues()) {
+  if (!encoding._stats && encoding.hasValues()) {
     encoding.setStats(vldata.stats(encoding.data().values));
   }
 

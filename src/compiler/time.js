@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 var util = require('../util'),
   d3_time_format = require('d3-time-format');
@@ -50,10 +50,13 @@ time.cardinality = function(field, fieldStats, filterNull, type) {
     case 'date': return 31;
     case 'month': return 12;
     case 'year':
-      // FIXME this doesn't exists yet
-      var yearstat = fieldStats.distinctUnit.year;
+      // FIXME(kanitw): Aug 8, 2015 -  this doesn't exists yet- #332
+      var yearstat = (fieldStats.distinctUnit || {}).year;
 
-
+      if (!yearstat) {
+        util.error('no statistic for year time unit of field ', field.name);
+        return null;
+      }
       return yearstat.distinct -
         (fieldStats.nulls > 0 && filterNull[type] ? 1 : 0);
   }

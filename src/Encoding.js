@@ -110,7 +110,10 @@ module.exports = (function() {
       if (!stats[field.name]) m[field.name] = 1;
       return m;
     }, {}));
-    util.error('missing fields:', missingFields.join(','));
+
+    if (missingFields.length > 0) {
+      util.error('missing fields:', missingFields.join(','));
+    }
   };
 
   /**
