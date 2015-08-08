@@ -9,9 +9,9 @@ var util = require('../util'),
 
 module.exports = vllayout;
 
-function vllayout(encoding, stats) {
-  var layout = box(encoding, stats);
-  layout = offset(encoding, stats, layout);
+function vllayout(encoding) {
+  var layout = box(encoding);
+  layout = offset(encoding, layout);
   return layout;
 }
 
@@ -21,7 +21,7 @@ function vllayout(encoding, stats) {
   One solution is to update Vega to support auto-sizing
   In the meantime, auto-padding (mostly) does the trick
  */
-function box(encoding, stats) {
+function box(encoding) {
   var hasRow = encoding.has(ROW),
       hasCol = encoding.has(COL),
       hasX = encoding.has(X),
@@ -29,8 +29,8 @@ function box(encoding, stats) {
       marktype = encoding.marktype();
 
   // FIXME/HACK we need to take filter into account
-  var xCardinality = hasX && encoding.isDimension(X) ? encoding.cardinality(X, stats) : 1,
-    yCardinality = hasY && encoding.isDimension(Y) ? encoding.cardinality(Y, stats) : 1;
+  var xCardinality = hasX && encoding.isDimension(X) ? encoding.cardinality(X) : 1,
+    yCardinality = hasY && encoding.isDimension(Y) ? encoding.cardinality(Y) : 1;
 
   var useSmallBand = xCardinality > encoding.config('largeBandMaxCardinality') ||
     yCardinality > encoding.config('largeBandMaxCardinality');
@@ -69,11 +69,11 @@ function box(encoding, stats) {
 
   var width = cellWidth, height = cellHeight;
   if (hasCol) {
-    var colCardinality = encoding.cardinality(COL, stats);
+    var colCardinality = encoding.cardinality(COL);
     width = cellWidth * ((1 + cellPadding) * (colCardinality - 1) + 1);
   }
   if (hasRow) {
-    var rowCardinality =  encoding.cardinality(ROW, stats);
+    var rowCardinality =  encoding.cardinality(ROW);
     height = cellHeight * ((1 + cellPadding) * (rowCardinality - 1) + 1);
   }
 
@@ -99,9 +99,9 @@ function getMaxNumberLength(encoding, et, fieldStats) {
   return d3_format.format(format)(fieldStats.max).length;
 }
 
-function getMaxLength(encoding, stats, et) {
+function getMaxLength(encoding, et) {
   var field = encoding.field(et),
-    fieldStats = stats[field.name];
+    fieldStats = encoding.stats(et);
 
   if (field.bin) {
     // TODO once bin support range, need to update this
@@ -119,13 +119,13 @@ function getMaxLength(encoding, stats, et) {
   }
 }
 
-function offset(encoding, stats, layout) {
+function offset(encoding, layout) {
   [X, Y].forEach(function (et) {
     // TODO(kanitw): Jul 19, 2015 - create a set of visual test for extraOffset
     var extraOffset = et === X ? 20 : 22,
       maxLength;
     if (encoding.isDimension(et) || encoding.isType(et, T)) {
-      maxLength = getMaxLength(encoding, stats, et);
+      maxLength = getMaxLength(encoding, et);
     } else if (
       // TODO once we have #512 (allow using inferred type)
       // Need to adjust condition here.
@@ -137,7 +137,7 @@ function offset(encoding, stats, layout) {
         // || (et===X && false)
         // FIXME determine when X would rotate, but should move this to axis.js first #506
       ) {
-        maxLength = getMaxLength(encoding, stats, et);
+        maxLength = getMaxLength(encoding, et);
       }
     } else {
       // nothing

@@ -7,7 +7,7 @@ var groupdef = require('./group').def,
 
 module.exports = template;
 
-function template(encoding, layout, stats) {
+function template(encoding, layout) {
   // jshint unused:false
 
   // TODO(kanitw): Jul 22, 2015 - split this file into data and template

@@ -4,14 +4,14 @@ require('../globals');
 
 var vlfield = require('../field');
 
-module.exports = function(encoding, stats) {
+module.exports = function(encoding) {
   return {
-    opacity: estimateOpacity(encoding, stats),
+    opacity: estimateOpacity(encoding),
   };
 };
 
-function estimateOpacity(encoding,stats) {
-  if (!stats) {
+function estimateOpacity(encoding) {
+  if (!encoding.stats) {
     return 1;
   }
 
@@ -31,25 +31,25 @@ function estimateOpacity(encoding,stats) {
           !((encType === X || encType === Y) &&
           vlfield.isOrdinalScale(field))
         ) {
-        numPoints *= encoding.cardinality(encType, stats);
+        numPoints *= encoding.cardinality(encType);
       }
     });
 
   } else { // raw plot
 
     // TODO: error handling
-    if (!stats['*'])
+    if (!encoding.stats['*'])
       return 1;
 
-    numPoints = stats['*'].max;  // count
+    numPoints = encoding.stats['*'].max;  // count
 
     // small multiples divide number of points
     var numMultiples = 1;
     if (encoding.has(ROW)) {
-      numMultiples *= encoding.cardinality(ROW, stats);
+      numMultiples *= encoding.cardinality(ROW);
     }
     if (encoding.has(COL)) {
-      numMultiples *= encoding.cardinality(COL, stats);
+      numMultiples *= encoding.cardinality(COL);
     }
     numPoints /= numMultiples;
   }

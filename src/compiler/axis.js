@@ -9,7 +9,7 @@ var util = require('../util'),
 
 var axis = module.exports = {};
 
-axis.def = function(name, encoding, layout, stats, opt) {
+axis.def = function(name, encoding, layout, opt) {
   var isCol = name == COL,
     isRow = name == ROW,
     type = isCol ? 'x' : isRow ? 'y' : name;
@@ -19,12 +19,12 @@ axis.def = function(name, encoding, layout, stats, opt) {
     scale: name,
     properties: {},
     layer: encoding.field(name).axis.layer,
-    orient: axis.orient(name, encoding, stats)
+    orient: axis.orient(name, encoding)
   };
 
   // Add axis label custom scale (for bin / time)
   def = axis.labels.scale(def, encoding, name);
-  def = axis.labels.format(def, name, encoding, stats);
+  def = axis.labels.format(def, name, encoding);
 
   // for x-axis, set ticks for Q or rotate scale for ordinal scale
   if (name == X) {
@@ -51,14 +51,14 @@ axis.def = function(name, encoding, layout, stats, opt) {
   return def;
 };
 
-axis.orient = function(name, encoding, stats) {
+axis.orient = function(name, encoding) {
   var orient = encoding.field(name).axis.orient;
   if (orient) return orient;
 
   if (name===COL) return 'top';
 
   // x-axis for long y - put on top
-  if (name===X && encoding.has(Y) && encoding.isOrdinalScale(Y) && encoding.cardinality(Y, stats) > 30) {
+  if (name===X && encoding.has(Y) && encoding.isOrdinalScale(Y) && encoding.cardinality(Y) > 30) {
     return 'top';
   }
 
@@ -173,8 +173,8 @@ axis.labels.scale = function(def, encoding, name) {
 /**
  * Determine number format or truncate if maxLabel length is presented.
  */
-axis.labels.format = function (def, name, encoding, stats) {
-  var fieldStats = stats[encoding.field(name).name];
+axis.labels.format = function (def, name, encoding) {
+  var fieldStats = encoding.stats(name);
 
   if (encoding.axis(name).format) {
     def.format = encoding.axis(name).format;

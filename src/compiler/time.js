@@ -40,7 +40,7 @@ function time(spec, encoding) { // FIXME refactor to reduce side effect #276
   return spec;
 }
 
-time.cardinality = function(field, stats, filterNull, type) {
+time.cardinality = function(field, fieldStats, filterNull, type) {
   var timeUnit = field.timeUnit;
   switch (timeUnit) {
     case 'seconds': return 60;
@@ -50,13 +50,12 @@ time.cardinality = function(field, stats, filterNull, type) {
     case 'date': return 31;
     case 'month': return 12;
     case 'year':
-      var stat = stats[field.name],
-        yearstat = stats['year_'+field.name];
+      // FIXME this doesn't exists yet
+      var yearstat = fieldStats.distinctUnit.year;
 
-      if (!yearstat) { return null; }
 
       return yearstat.distinct -
-        (stat.nulls > 0 && filterNull[type] ? 1 : 0);
+        (fieldStats.nulls > 0 && filterNull[type] ? 1 : 0);
   }
 
   return null;

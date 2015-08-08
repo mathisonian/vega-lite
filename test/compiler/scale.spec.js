@@ -9,6 +9,8 @@ var util = require('../../src/util'),
   colorbrewer = require('colorbrewer');
 
 describe('vl.compile.scale', function() {
+  var stats = {origin: {min: -5, max:48}};
+
   describe('sort()', function() {
     it('should return true for any ordinal or binned field', function() {
       var encoding = Encoding.fromSpec({
@@ -16,7 +18,7 @@ describe('vl.compile.scale', function() {
             x: { name: 'origin', type: O},
             y: { bin: true, name: 'origin', type: Q}
           }
-        });
+        }, stats);
 
       expect(vlscale.sort({type: 'ordinal'}, encoding, 'x'))
         .to.eql(true);
@@ -30,19 +32,17 @@ describe('vl.compile.scale', function() {
     var sortingReturn = 'sorted',
       sorting = {
         getDataset: function() {return 'sorted';}
-      };
+      },
+      nosorting = {};
 
     it('should return correct stack', function() {
-      var domain = vlscale.domain('y', Encoding.fromSpec({
-        encoding: {
-          y: {
-            name: 'origin'
+      var encoding = Encoding.fromSpec({
+          encoding: {
+            y: { name: 'origin'}
           }
-        }
-      }), {}, {}, {
-        stack: 'y',
-        facet: true
-      });
+        }, stats);
+
+      var domain = vlscale.domain('y', encoding, nosorting, {stack: 'y', facet: true});
 
       expect(domain).to.eql({
         data: 'stacked',
@@ -51,17 +51,13 @@ describe('vl.compile.scale', function() {
     });
 
     it('should return correct aggregated stack', function() {
-      var domain = vlscale.domain('y', Encoding.fromSpec({
-        encoding: {
-          y: {
-            aggregate: 'sum',
-            name: 'origin'
-          }
-        }
-      }), {}, {}, {
-        stack: 'y',
-        facet: true
-      });
+      var encoding = Encoding.fromSpec({
+            encoding: {
+              y: { aggregate: 'sum', name: 'origin'}
+            }
+          }, stats);
+
+      var domain = vlscale.domain('y', encoding, nosorting, {stack: 'y', facet: true});
 
       expect(domain).to.eql({
         data: 'stacked',
@@ -71,39 +67,43 @@ describe('vl.compile.scale', function() {
 
     it('should return the right domain if binned Q',
       function() {
-        var domain = vlscale.domain('y', Encoding.fromSpec({
-          encoding: {
-            y: {
-              bin: {maxbins: 15},
-              name: 'origin',
-              scale: {useRawDomain: true},
-              type: Q
+        var encoding = Encoding.fromSpec({
+            encoding: {
+              y: {
+                bin: {maxbins: 15},
+                name: 'origin',
+                scale: {useRawDomain: true},
+                type: Q
+              }
             }
-          }
-        }), {origin: {min: -5, max:48}}, sorting, {});
+          },
+          stats);
+        var domain = vlscale.domain('y', encoding, sorting, {});
 
         expect(domain).to.eql([-5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45]);
       });
 
     it('should return the raw domain if useRawDomain is true for non-bin, non-sum Q',
       function() {
-        var domain = vlscale.domain('y', Encoding.fromSpec({
-          encoding: {
-            y: {
-              aggregate: 'mean',
-              name: 'origin',
-              scale: {useRawDomain: true},
-              type: Q
-            }
-          }
-        }), {}, {}, {});
+        var encoding = Encoding.fromSpec({
+                        encoding: {
+                          y: {
+                            aggregate: 'mean',
+                            name: 'origin',
+                            scale: {useRawDomain: true},
+                            type: Q
+                          }
+                        }
+                      }, stats);
+
+        var domain = vlscale.domain('y', encoding, nosorting, {});
 
         expect(domain.data).to.eql(RAW);
       });
 
     it('should return the aggregate domain for sum Q',
       function() {
-        var domain = vlscale.domain('y', Encoding.fromSpec({
+        var encoding = Encoding.fromSpec({
           encoding: {
             y: {
               aggregate: 'sum',
@@ -112,38 +112,41 @@ describe('vl.compile.scale', function() {
               type: Q
             }
           }
-        }), {}, sorting, {});
+        }, stats);
+        var domain = vlscale.domain('y', encoding, sorting, {});
 
         expect(domain.data).to.eql(sortingReturn);
       });
 
     it('should return the raw domain if useRawDomain is true for raw T',
       function() {
-        var domain = vlscale.domain('y', Encoding.fromSpec({
-          encoding: {
-            y: {
-              name: 'origin',
-              scale: {useRawDomain: true},
-              type: T
+        var encoding = Encoding.fromSpec({
+            encoding: {
+              y: {
+                name: 'origin',
+                scale: {useRawDomain: true},
+                type: T
+              }
             }
-          }
-        }), {}, {}, {});
+          }, stats);
+        var domain = vlscale.domain('y', encoding, nosorting, {});
 
         expect(domain.data).to.eql(RAW);
       });
 
     it('should return the raw domain if useRawDomain is true for year T',
       function() {
-        var domain = vlscale.domain('y', Encoding.fromSpec({
-          encoding: {
-            y: {
-              name: 'origin',
-              scale: {useRawDomain: true},
-              type: T,
-              timeUnit: 'year'
+        var encoding = Encoding.fromSpec({
+            encoding: {
+              y: {
+                name: 'origin',
+                scale: {useRawDomain: true},
+                type: T,
+                timeUnit: 'year'
+              }
             }
-          }
-        }), {}, {}, {});
+          }, stats);
+        var domain = vlscale.domain('y', encoding, nosorting, {});
 
         expect(domain.data).to.eql(RAW);
         expect(domain.field.indexOf('year')).to.gt(-1);
@@ -151,31 +154,33 @@ describe('vl.compile.scale', function() {
 
     it('should return the correct domain for month T',
       function() {
-        var domain = vlscale.domain('y', Encoding.fromSpec({
-          encoding: {
-            y: {
-              name: 'origin',
-              scale: {useRawDomain: true},
-              type: T,
-              timeUnit: 'month'
+        var encoding = Encoding.fromSpec({
+            encoding: {
+              y: {
+                name: 'origin',
+                scale: {useRawDomain: true},
+                type: T,
+                timeUnit: 'month'
+              }
             }
-          }
-        }), {}, sorting, {});
+          }, stats);
+        var domain = vlscale.domain('y', encoding, sorting, {});
 
         expect(domain).to.eql([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
       });
 
     it('should return the aggregated domain if useRawDomain is false', function() {
-      var domain = vlscale.domain('y', Encoding.fromSpec({
-        encoding: {
-          y: {
-            aggregate: 'min',
-            name: 'origin',
-            scale: {useRawDomain: false},
-            type: Q
+      var encoding = Encoding.fromSpec({
+          encoding: {
+            y: {
+              aggregate: 'min',
+              name: 'origin',
+              scale: {useRawDomain: false},
+              type: Q
+            }
           }
-        }
-      }),  {}, sorting, {});
+        }, stats);
+      var domain = vlscale.domain('y', encoding, sorting, {});
 
       expect(domain.data).to.eql(sortingReturn);
     });

@@ -7,14 +7,14 @@ var vlfield = require('../field');
 module.exports = addSortTransforms;
 
 // adds new transforms that produce sorted fields
-function addSortTransforms(data, encoding, stats, opt) {
+function addSortTransforms(data, encoding, opt) {
   // jshint unused:false
 
   var datasetMapping = {};
   var counter = 0;
 
   encoding.forEach(function(field, encType) {
-    var sortBy = encoding.sort(encType, stats);
+    var sortBy = encoding.sort(encType);
     if (sortBy.length > 0) {
       var fields = sortBy.map(function(d) {
         return {

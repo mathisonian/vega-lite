@@ -10,9 +10,10 @@ describe('Encoding.fromShorthand()', function () {
     var encoding = Encoding.fromShorthand(shorthand);
     expect(encoding.has('y')).ok;
     expect(encoding.has('x')).ok;
-
   });
 });
+
+// FIXME(kanitw): Aug 8, 2015 - add test cases to test Encoding.fromShorthand, fromSpec params
 
 describe('encoding.filter()', function () {
   var spec = {
@@ -31,7 +32,7 @@ describe('encoding.filter()', function () {
   });
 
   it('should add filterNull for O when specified', function () {
-    var encoding = Encoding.fromSpec(spec, {
+    var encoding = Encoding.fromSpec(spec, {}, {
       config: {
         filterNull: {O: true}
       }

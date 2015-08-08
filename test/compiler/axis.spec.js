@@ -19,7 +19,7 @@ describe('Axis', function() {
         encoding: {
           x: {name: fieldName, type: 'T', timeUnit: timeUnit}
         }
-      });
+      }, stats);
     var _axis = axis.def('x', encoding, {
       width: 200,
       height: 200,
@@ -31,7 +31,7 @@ describe('Axis', function() {
       y: {
         axisTitleOffset: 60
       }
-    }, stats);
+    });
 
     //FIXME decouple the test here
 
@@ -108,7 +108,7 @@ describe('Axis', function() {
             x: {name: 'a'},
             y: {name: 'b', type: 'O'}
           }
-        }), stats);
+        }, stats));
       expect(orient).to.eql('top');
     });
   });
@@ -119,7 +119,7 @@ describe('Axis', function() {
           encoding: {
             x: {name: 'a', axis: {title: 'Custom'}}
           }
-        }), stats, layout);
+        }, stats), layout);
       expect(def.title).to.eql('Custom');
     });
 
@@ -128,7 +128,7 @@ describe('Axis', function() {
           encoding: {
             x: {name: 'a', axis: {titleMaxLength: '3'}}
           }
-        });
+        }, stats);
 
       var def = axis.title({}, 'x', encoding, layout);
       expect(def.title).to.eql('a');
@@ -139,7 +139,7 @@ describe('Axis', function() {
           encoding: {
             x: {name: 'a', aggregate: 'sum', axis: {titleMaxLength: '10'}}
           }
-        });
+        }, stats);
 
       var def = axis.title({}, 'x', encoding, layout);
       expect(def.title).to.eql('SUM(a)');
@@ -150,7 +150,7 @@ describe('Axis', function() {
           encoding: {
             x: {name: 'a', aggregate: 'sum', axis: {titleMaxLength: '3'}}
           }
-        });
+        }, stats);
 
       var def = axis.title({}, 'x', encoding, layout);
       expect(def.title).to.eql('SU…');
@@ -162,7 +162,7 @@ describe('Axis', function() {
           encoding: {
             x: {name: 'abcdefghijkl'}
           }
-        });
+        }, stats);
 
       var def = axis.title({}, 'x', encoding, layout);
       expect(def.title).to.eql('abcdefghi…');

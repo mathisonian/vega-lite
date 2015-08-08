@@ -18,9 +18,9 @@ describe('Sort', function() {
             name: 'foo', aggregate: 'max', reverse: true
           }]}
         }
-      }),
+      }, {}),
     data = [{name: RAW}, {name: TABLE}],
-    sorting = vlsort(data, encoding, {});
+    sorting = vlsort(data, encoding);
 
   it('should add new data and transform', function() {
     expect(data.length).to.equal(4);

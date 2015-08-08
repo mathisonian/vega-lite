@@ -1,6 +1,6 @@
 'use strict';
 
-var summary = module.exports = require('datalib/src/stats').summary;
+var vldata = require('../data');
 
 require('../globals');
 
@@ -26,24 +26,21 @@ compiler.template = require('./template');
 compiler.time = require('./time');
 
 compiler.compile = function (spec, stats, theme) {
-  return compiler.compileEncoding(Encoding.fromSpec(spec, theme), stats);
+  return compiler.compileEncoding(Encoding.fromSpec(spec, stats, theme));
 };
 
-compiler.shorthand = function (shorthand, stats, config, theme) {
-  return compiler.compileEncoding(Encoding.fromShorthand(shorthand, config, theme), stats);
+compiler.shorthand = function (shorthand, data, stats, config, theme) {
+  return compiler.compileEncoding(Encoding.fromShorthand(shorthand, data, stats, config, theme));
 };
 
-compiler.compileEncoding = function (encoding, stats) {
+compiler.compileEncoding = function (encoding) {
   // no need to pass stats if you pass in the data
-  if (!stats && encoding.hasValues()) {
-    stats = summary(encoding.data('values')).reduce(function(s, p) {
-      s[p.field] = p;
-      return s;
-    }, {});
+  if (!encoding.stats() && encoding.hasValues()) {
+    encoding.setStats(vldata.stats(encoding.data().values));
   }
 
-  var layout = compiler.layout(encoding, stats),
-    spec = compiler.template(encoding, layout, stats);
+  var layout = compiler.layout(encoding),
+    spec = compiler.template(encoding, layout);
 
   // .data related stuff
   var rawTable = spec.data[0],
@@ -53,12 +50,12 @@ compiler.compileEncoding = function (encoding, stats) {
   spec = compiler.time(spec, encoding);              // modify rawTable, add scales
   dataTable = compiler.bin(dataTable, encoding);     // modify dataTable
   var aggResult = compiler.aggregate(dataTable, encoding); // modify dataTable
-  var sorting = compiler.sort(spec.data, encoding, stats); // append new data
+  var sorting = compiler.sort(spec.data, encoding); // append new data
 
   // marks
-  var style = compiler.style(encoding, stats),
+  var style = compiler.style(encoding),
     group = spec.marks[0],
-    mdefs = marks.def(encoding, layout, style, stats),
+    mdefs = marks.def(encoding, layout, style),
     mdef = mdefs[mdefs.length - 1];  // TODO: remove this dirty hack by refactoring the whole flow
 
   for (var i = 0; i < mdefs.length; i++) {
@@ -94,14 +91,14 @@ compiler.compileEncoding = function (encoding, stats) {
 
   // Small Multiples
   if (encoding.has(ROW) || encoding.has(COL)) {
-    spec = compiler.facet(group, encoding, layout, style, sorting, spec, singleScaleNames, stack, stats);
+    spec = compiler.facet(group, encoding, layout, style, sorting, spec, singleScaleNames, stack);
     spec.legends = legend.defs(encoding, style);
   } else {
-    group.scales = scale.defs(singleScaleNames, encoding, layout, stats, style, sorting, {stack: stack});
+    group.scales = scale.defs(singleScaleNames, encoding, layout,  style, sorting, {stack: stack});
 
     group.axes = [];
-    if (encoding.has(X)) group.axes.push(axis.def(X, encoding, layout, stats));
-    if (encoding.has(Y)) group.axes.push(axis.def(Y, encoding, layout, stats));
+    if (encoding.has(X)) group.axes.push(axis.def(X, encoding, layout));
+    if (encoding.has(Y)) group.axes.push(axis.def(Y, encoding, layout));
 
     group.legends = legend.defs(encoding, style);
   }

@@ -9,7 +9,7 @@ var consts = require('./consts'),
   schema = require('./schema/schema');
 
 module.exports = (function() {
-  function Encoding(spec, theme) {
+  function Encoding(spec, stats, theme) {
     var defaults = schema.instantiate(),
       specExtended = schema.util.merge(defaults, theme || {}, spec) ;
 
@@ -18,12 +18,14 @@ module.exports = (function() {
     this._enc = specExtended.encoding;
     this._config = specExtended.config;
     this._filter = specExtended.filter;
+    if(stats) this.setStats(stats);
+
     // this._vega2 = true;
   }
 
   var proto = Encoding.prototype;
 
-  Encoding.fromShorthand = function(shorthand, data, config, theme) {
+  Encoding.fromShorthand = function(shorthand, data, stats, config, theme) {
     var c = consts.shorthand,
         split = shorthand.split(c.delim),
         marktype = split.shift().split(c.assign)[1].trim(),
@@ -38,8 +40,8 @@ module.exports = (function() {
     }, theme);
   };
 
-  Encoding.fromSpec = function(spec, theme) {
-    return new Encoding(spec, theme);
+  Encoding.fromSpec = function(spec, stats, theme) {
+    return new Encoding(spec, stats, theme);
   };
 
   proto.toShorthand = function() {
@@ -97,6 +99,33 @@ module.exports = (function() {
 
   proto.field = function(et) {
     return this._enc[et];
+  };
+
+  proto.setStats = function(stats) {
+    this._stats = stats;
+
+    // display error if encoding contains field that does not exist
+    // in the stats
+    var missingFields = util.keys(this.reduce(function(m, field) {
+      if (!stats[field.name]) m[field.name] = 1;
+      return m;
+    }, {}));
+    util.error('missing fields:', missingFields.join(','));
+  };
+
+  /**
+   * @param  {String} et encoding type
+   * @return {Object} a field stats Object if et is specified.
+   *                  or a stats dictionary (field name => field stats) if et is undefined.
+   */
+  proto.stats = function(et) {
+    if (!this._stats) throw new Error('Stats not specified yet');
+
+    if (et) {
+      var field = this.field(et);
+      return this._stats[field.name];
+    }
+    return this._stats;
   };
 
   proto.filter = function() {
@@ -197,14 +226,14 @@ module.exports = (function() {
     return this.config(formatConfig);
   };
 
-  proto.sort = function(et, stats) {
+  proto.sort = function(et) {
     var sort = this._enc[et].sort,
       enc = this._enc,
       isTypes = vlfield.isTypes;
 
     if ((!sort || sort.length===0) &&
         // FIXME
-        Encoding.toggleSort.support({encoding:this._enc}, stats, true) && //HACK
+        Encoding.toggleSort.support({encoding:this._enc}, this.stats(), true) && //HACK
         this.config('toggleSort') === Q
       ) {
       var qField = isTypes(enc.x, [N, O]) ? enc.y : enc.x;
@@ -296,8 +325,8 @@ module.exports = (function() {
     return (this.is('bar') || this.is('area')) && this.has('color');
   };
 
-  proto.cardinality = function(encType, stats) {
-    return vlfield.cardinality(this.field(encType), stats, this.config('filterNull'));
+  proto.cardinality = function(et) {
+    return vlfield.cardinality(this.field(et), this.stats(et), this.config('filterNull'));
   };
 
   proto.isRaw = function() {

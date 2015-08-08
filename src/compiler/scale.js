@@ -15,19 +15,19 @@ scale.names = function(props) {
   }, {}));
 };
 
-scale.defs = function(names, encoding, layout, stats, style, sorting, opt) {
+scale.defs = function(names, encoding, layout, style, sorting, opt) {
   opt = opt || {};
 
   return names.reduce(function(a, name) {
     var s = {
       name: name,
       type: scale.type(name, encoding),
-      domain: scale.domain(name, encoding, stats, sorting, opt)
+      domain: scale.domain(name, encoding, sorting, opt)
     };
 
     s.sort = scale.sort(s, encoding, name) || undefined;
 
-    scale.range(s, encoding, layout, stats, opt);
+    scale.range(s, encoding, layout, opt);
 
     return (a.push(s), a);
   }, []);
@@ -56,7 +56,7 @@ scale.type = function(name, encoding) {
   }
 };
 
-scale.domain = function (name, encoding, stats, sorting, opt) {
+scale.domain = function (name, encoding, sorting, opt) {
   var field = encoding.field(name);
 
   if (encoding.isType(name, T)) {
@@ -66,7 +66,7 @@ scale.domain = function (name, encoding, stats, sorting, opt) {
 
   if (field.bin) {
     // TODO(kanitw): this must be changed in vg2
-    var fieldStat = stats[field.name],
+    var fieldStat = encoding.stats(name),
       bins = util.getbins(fieldStat, field.bin.maxbins || schema.MAXBINS_DEFAULT),
       numbins = (bins.stop - bins.start) / bins.step;
     return util.range(numbins).map(function(i) {
@@ -104,7 +104,7 @@ scale.domain = function (name, encoding, stats, sorting, opt) {
 };
 
 
-scale.range = function (s, encoding, layout, stats) {
+scale.range = function (s, encoding, layout) {
   var spec = encoding.scale(s.name),
     field = encoding.field(s.name),
     timeUnit = field.timeUnit;
@@ -183,7 +183,7 @@ scale.range = function (s, encoding, layout, stats) {
       s.range = 'shapes';
       break;
     case COLOR:
-      s.range = scale.color(s, encoding, stats);
+      s.range = scale.color(s, encoding);
       if (s.type !== 'ordinal') s.zero = false;
       break;
     default:
@@ -206,10 +206,10 @@ scale.range = function (s, encoding, layout, stats) {
   }
 };
 
-scale.color = function(s, encoding, stats) {
+scale.color = function(s, encoding) {
   var colorScale = encoding.scale(COLOR),
     range = colorScale.range,
-    cardinality = encoding.cardinality(COLOR, stats),
+    cardinality = encoding.cardinality(COLOR),
     type = encoding.type(COLOR);
 
   if (range === undefined) {
