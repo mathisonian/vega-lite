@@ -65,7 +65,7 @@
     "d3-color": "^0.2.4",
     "d3-format": "^0.3.0",
     "d3-time-format": "0.1.0",
-    "datalib": "^1.4.5",
+    "datalib": "mathisonian/datalib",
     "yargs": "^3.23.0"
   }
 }
